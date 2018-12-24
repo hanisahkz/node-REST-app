@@ -2,6 +2,8 @@
 // Dependencies
 const http = require('http');
 const url = require('url');
+// an SD object
+const StringDecoder = require('string_decoder').StringDecoder;
 
 // Server responds to all string
 const server = http.createServer(function(req, res) {
@@ -23,8 +25,29 @@ const server = http.createServer(function(req, res) {
     // Get request HTTP method
     const method = req.method.toLowerCase();
 
-    res.end('The response returned for URL: ' + trimmedUrl + ' with HTTP method: ' + method + '\n');
-    console.log('Header contains the following ', headersObject);
+    // Get payload if present. Pass charset it should be decoding
+    // utf-8 is pretty common when dealing with JSON API
+    let decoder = new StringDecoder('utf-8');
+    let placeholder = '';
+
+    // Event binding as "data comes in" / during "data" event
+    // Disclaimer: request's "data" event won't always get called
+    req.on('data', (data) => {
+        // Append data to the placeholder as data is streaming (coming) in
+        // since the data coming in are in utf-8 format, so it will be decoded
+        // whenever data streams in, it will be decoded before appended to the placeholder
+        placeholder += decoder.write(data);
+    }); 
+
+    // This tells that when there's no more request ie when the request is done
+    // Disclaimer: request's "end" event will always gets called
+    req.on('end', () => {
+        placeholder += decoder.end();
+
+        // Response ending
+        res.end('Response success!');
+        console.log('Request received with the following payload: ', placeholder);
+    });
 });
 
 // Server listen to port 3030
