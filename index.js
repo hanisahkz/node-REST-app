@@ -44,9 +44,33 @@ const server = http.createServer(function(req, res) {
     req.on('end', () => {
         placeholder += decoder.end();
 
-        // Response ending
-        res.end('Response success!');
-        console.log('Request received with the following payload: ', placeholder);
+        // Define logic that determines which handler to choose
+        let chosenHandler = typeof(router[trimmedUrl]) !== 'undefined' ? router[trimmedUrl] : handler.notFound;
+     
+        // Construct data object to be sent to the handler
+        const data = {
+            "trimmedPath": trimmedUrl,
+            "queryObject": queryStringObject,
+            "method": method,
+            "headers": headersObject,
+            "payload": placeholder
+        };
+
+        chosenHandler(data, (statusCode, payload) => {
+            // Use status code returned by handler, or choose a default of 200 response
+            statusCode = typeof(statusCode) == 'number' ? statusCode : 200;
+
+            // Use payload returned by handler or default to empty object
+            payload = typeof(payload) == 'object' ? payload : {};
+            
+            // Every payload receives now is an object. So, need to convert into a String
+            const payloadString = JSON.stringify(payload);
+
+            // Return the response
+            res.writeHead(statusCode);
+            res.end(payloadString);
+            console.log('Status code and response: ', statusCode, payloadString);
+        });
     });
 });
 
@@ -54,3 +78,36 @@ const server = http.createServer(function(req, res) {
 server.listen(3030, function() {
     console.log('App is up at localhost:3030');
 });
+
+// Section for router
+// Create a handler object
+let handler = {};
+
+// Define a sample handler with a function that accepts data and callback
+handler.sample = (data, callback) => {
+    // callback should return HTTP 200 and payload object when request is completed
+    const handlerPayload = {
+        'status': 'Request successful',
+        'payload': 'Some random content'
+    };
+    callback(406, handlerPayload);
+};
+
+handler.someUrl = (data, callback) => {
+    const handlerPayload = {
+        'status': 'Request made to /someUrl',
+        'payload': 'Payload body'
+    };
+    callback(200, handlerPayload);
+};
+
+// Not found handler
+handler.notFound = (data, callback) => {
+    callback(404);
+};
+
+// Router is an object. This will whitelist the allowed URL
+let router = {
+    'sample': handler.sample,
+    'someUrl': handler.someUrl
+};
