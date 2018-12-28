@@ -1,13 +1,41 @@
-
 // Dependencies
 const http = require('http');
 const url = require('url');
 // an SD object
 const StringDecoder = require('string_decoder').StringDecoder;
 const config = require('./config');
+// Needed for HTTPS connection
+const https = require('https');
+const fs = require('fs');
 
-// Server responds to all string
-const server = http.createServer(function(req, res) {
+// Create server 1 - HTTP server
+const httpServer = http.createServer((req, res) => {
+    unifiedServer(req, res);
+});
+
+// Start HTTP server
+httpServer.listen(config.httpPort, () => {
+    console.log('App is up at port '+ config.httpPort);
+});
+
+// Create server 2 - HTTPS server. Extra configuration - add variable that has HTTPS options before calling the callback
+const httpsServerOptions = {
+    // Most of the time, we'd want to read files asynchronously, but in this case, synchronous makes more sense
+    "cert": fs.readFileSync('./https/cert.pem'),
+    "key": fs.readFileSync('./https/key.pem')
+};
+
+const httpsServer = http.createServer(httpsServerOptions, (req, res) => {
+    unifiedServer(req, res);
+});
+
+// Start HTTPS server
+httpsServer.listen(config.port, () => {
+    console.log('App is up at port '+ config.httpsPort);
+});
+
+// Refactor - define server logic here
+const unifiedServer = (req, res) => {
     //req is an instance of IncomingMessage that has a number of keys
     //req.url means accessing IncomingMessage's key
     const parsedUrl = url.parse(req.url, true);
@@ -75,12 +103,7 @@ const server = http.createServer(function(req, res) {
             console.log('Status code and response: ', statusCode, payloadString);
         });
     });
-});
-
-// Server defaulted to port 3030 if in staging or unspecified
-server.listen(config.port, function() {
-    console.log('App is up port '+ config.port + ' for environment: ' + config.envName);
-});
+}
 
 // Section for router
 // Create a handler object

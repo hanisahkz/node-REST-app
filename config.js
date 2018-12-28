@@ -6,12 +6,14 @@ let environments = {};
 // Environment variables with their own configuration
 //"staging" environment will be default
 environments.staging = {
-    "port": 3030,
+    "httpPort": 3030,
+    "httpsPort": 3031,
     "envName": "staging"
 };
 
 environments.production = {
-    "port": 8081,
+    "httpPort": 8081,
+    "httpsPort": 8082,
     "envName": "production"
 };
 
