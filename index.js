@@ -4,6 +4,7 @@ const http = require('http');
 const url = require('url');
 // an SD object
 const StringDecoder = require('string_decoder').StringDecoder;
+const config = require('./config');
 
 // Server responds to all string
 const server = http.createServer(function(req, res) {
@@ -67,6 +68,8 @@ const server = http.createServer(function(req, res) {
             const payloadString = JSON.stringify(payload);
 
             // Return the response
+            // This tells browser that we are sending JSON request and the browser should know that they are getting JSON object and process accordingly 
+            res.setHeader('Content-Type', 'application/json');
             res.writeHead(statusCode);
             res.end(payloadString);
             console.log('Status code and response: ', statusCode, payloadString);
@@ -74,9 +77,9 @@ const server = http.createServer(function(req, res) {
     });
 });
 
-// Server listen to port 3030
-server.listen(3030, function() {
-    console.log('App is up at localhost:3030');
+// Server defaulted to port 3030 if in staging or unspecified
+server.listen(config.port, function() {
+    console.log('App is up port '+ config.port + ' for environment: ' + config.envName);
 });
 
 // Section for router
