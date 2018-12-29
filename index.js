@@ -7,6 +7,29 @@ const config = require('./config');
 // Needed for HTTPS connection
 const https = require('https');
 const fs = require('fs');
+// For writing data into files
+const __data = require('./lib/data');
+
+// TODO: need to recap on this function
+// Testing for creating data function
+// __data.create('test', 'someFile', {'key3': 'value3'}, err => {
+//     console.log('This was the error:', err);
+// });
+
+// Testing for reading data function
+// __data.read('test', 'someFile', (err, data) => {
+//     console.log('This was the error:', err, ' and the data: ', data);
+// });
+
+// Testing for updating data function
+// __data.update('test', 'someFile', {'keyUpdate3': 'updateValue3'}, err => {
+//     console.log('This was the error:', err);
+// });
+
+// Testing for deleting file
+// __data.delete('test', 'someFile', (err) => {
+//     console.log('This was the error:', err);
+// });
 
 // Create server 1 - HTTP server
 const httpServer = http.createServer((req, res) => {
