@@ -3,12 +3,14 @@ const http = require('http');
 const url = require('url');
 // an SD object
 const StringDecoder = require('string_decoder').StringDecoder;
-const config = require('./config');
+const config = require('./lib/config');
 // Needed for HTTPS connection
 const https = require('https');
 const fs = require('fs');
 // For writing data into files
 const __data = require('./lib/data');
+const handlers = require('./lib/handlers');
+const helpers = require('./lib/helpers');
 
 // Create server 1 - HTTP server
 const httpServer = http.createServer((req, res) => {
@@ -76,15 +78,16 @@ const unifiedServer = (req, res) => {
         placeholder += decoder.end();
 
         // Define logic that determines which handlers to choose
+        // router["someString"] is used instead of router.someString as this allows dynamic handling of router based on user input
         let chosenHandler = typeof(router[trimmedUrl]) !== 'undefined' ? router[trimmedUrl] : handlers.notFound;
      
         // Construct data object to be sent to the handlers
         const data = {
             "trimmedPath": trimmedUrl,
-            "queryObject": queryStringObject,
+            "queryStringObj": queryStringObject,
             "method": method,
             "headers": headersObject,
-            "payload": placeholder
+            "payload": helpers.parseJsonToObject(placeholder)
         };
 
         chosenHandler(data, (statusCode, payload) => {
@@ -105,34 +108,11 @@ const unifiedServer = (req, res) => {
             console.log('Status code and response: ', statusCode, payloadString);
         });
     });
-}
-
-// Section for router
-// Create a handlers object
-let handlers = {};
-
-// Define a sample handlers with a function that accepts data and callback
-handlers.sample = (data, callback) => {
-    // callback should return HTTP 200 and payload object when request is completed
-    const handlerPayload = {
-        'status': 'Request successful',
-        'payload': 'Some random content'
-    };
-    callback(406, handlerPayload);
-};
-
-handlers.ping = (data, callback) => {
-    // This call only returns request's status code. This doesn't generate payload.
-    callback(200);
-};
-
-// Not found handlers
-handlers.notFound = (data, callback) => {
-    callback(404);
 };
 
 // Router is an object. This will whitelist the allowed URL
-let router = {
+const router = {
     'sample': handlers.sample,
-    'ping': handlers.ping
+    'ping': handlers.ping,
+    'users': handlers.users
 };
